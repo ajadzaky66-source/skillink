@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validasi Nilai & Sertifikat - Skill Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .summary-4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-box { background: white; border-radius: 14px; padding: 18px 22px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05); }
+        .stat-box small { display: block; font-size: 12px; color: #64748b; margin-bottom: 6px; }
+        .stat-box .big-num { font-size: 28px; font-weight: 700; color: #0f172a; line-height: 1.1; margin-bottom: 6px; }
+        .stat-box .sub-link { font-size: 11px; color: #0b7fd0; font-weight: 700; }
+
+        .filter-controls-row { display: flex; gap: 12px; margin-bottom: 14px; }
+        .search-wrap { flex: 1; position: relative; }
+        .search-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; }
+        .search-wrap input { width: 100%; padding: 11px 16px 11px 42px; border-radius: 12px; border: 1px solid #38bdf8; background: white; font-size: 13px; outline: none; }
+        .sort-dropdown { padding: 11px 16px; border-radius: 12px; border: 1px solid #38bdf8; background: white; font-size: 12px; min-width: 180px; }
+
+        .filter-pills-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+        .pill-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-pill-btn { padding: 7px 18px; border-radius: 18px; border: none; background: white; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .filter-pill-btn.active { background: #0b7fd0; color: white; }
+
+        .validation-grid { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
+        .submission-list { display: flex; flex-direction: column; gap: 12px; }
+        .submission-card {
+            background: white; border-radius: 14px; padding: 16px 20px; border: 2px solid transparent;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05); cursor: pointer; transition: 0.2s;
+        }
+        .submission-card.selected { border-color: #0b7fd0; background: #f8fbff; }
+        .type-pill { padding: 4px 12px; border-radius: 12px; background: #eff6ff; color: #0b7fd0; border: 1px solid #bfdbfe; font-size: 11px; font-weight: 700; }
+        .status-pill { padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .st-menunggu { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+        .st-disetujui { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; }
+        .st-ditolak { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+
+        .cert-preview-mini { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-bottom: 10px; cursor: pointer; }
+        .cert-dashed-box { border: 1.5px dashed #38bdf8; border-radius: 8px; padding: 16px 12px; text-align: center; }
+        .meta-kv { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #f8fafc; }
+        .status-banner-done { margin-top: 14px; padding: 11px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 700; }
+        .banner-approved { background: #dcfce7; color: #15803d; }
+        .banner-rejected { background: #fee2e2; color: #dc2626; }
+
+        .reason-chip { padding: 5px 11px; border-radius: 14px; border: 1px solid #7dd3fc; background: white; color: #0b7fd0; font-size: 11px; cursor: pointer; }
+        @media (max-width: 980px) { .summary-4-grid { grid-template-columns: repeat(2, 1fr); } .validation-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div id="appShell"></div>
+
+    <main class="main-container">
+        <div class="page-header-row">
+            <div>
+                <h1 class="page-title">Validasi Nilai &amp; Sertifikat</h1>
+                <p class="page-subtitle">Tinjau, setujui, atau tolak pengajuan nilai dan sertifikat lomba mahasiswa TRPL.</p>
+            </div>
+            <button type="button" class="btn-primary" id="exportCsvBtn">↓ Ekspor Rekap</button>
+        </div>
+
+        <div class="summary-4-grid">
+            <div class="stat-box"><small>Menunggu Validasi</small><div class="big-num" id="statPending">12</div><div class="sub-link">Perlu ditinjau</div></div>
+            <div class="stat-box"><small>Disetujui</small><div class="big-num" id="statApproved">48</div><div class="sub-link">Sudah tervalidasi</div></div>
+            <div class="stat-box"><small>Ditolak</small><div class="big-num" id="statRejected">5</div><div class="sub-link">Perlu revisi mahasiswa</div></div>
+            <div class="stat-box"><small>Total Pengajuan</small><div class="big-num" id="statTotal">65</div><div class="sub-link">Nilai &amp; sertifikat</div></div>
+        </div>
+
+        <div class="filter-controls-row">
+            <div class="search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Cari nama mahasiswa, NIM, atau judul berkas...">
+            </div>
+            <select id="sortSelect" class="sort-dropdown">
+                <option value="newest">Urutkan: Terbaru</option>
+                <option value="oldest">Urutkan: Terlama</option>
+            </select>
+        </div>
+
+        <div class="filter-pills-bar">
+            <div class="pill-tabs">
+                <button type="button" class="filter-pill-btn active" data-filter="Semua">Semua</button>
+                <button type="button" class="filter-pill-btn" data-filter="Nilai">Nilai</button>
+                <button type="button" class="filter-pill-btn" data-filter="Sertifikat">Sertifikat</button>
+                <button type="button" class="filter-pill-btn" data-filter="Menunggu">Menunggu</button>
+                <button type="button" class="filter-pill-btn" data-filter="Disetujui">Disetujui</button>
+                <button type="button" class="filter-pill-btn" data-filter="Ditolak">Ditolak</button>
+            </div>
+            <span style="font-size:12px; color:#475569;">65 pengajuan ditemukan</span>
+        </div>
+
+        <div class="validation-grid">
+            <section>
+                <h2 style="font-size:17px; margin-bottom:14px;">Pengajuan Masuk</h2>
+                <div class="submission-list" id="submissionList"></div>
+            </section>
+
+            <aside>
+                <div class="card-box" style="margin-bottom:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <h3 style="font-size:16px;">Detail Pengajuan</h3>
+                        <span class="status-pill st-menunggu" id="detailStatusBadge">Menunggu</span>
+                    </div>
+
+                    <div class="cert-preview-mini" id="miniPreviewBox">
+                        <div class="cert-dashed-box">
+                            <small style="display:block; font-size:10px; font-weight:700; color:#0b7fd0; margin-bottom:10px;" id="miniCertHeader">SERTIFIKAT PENGHARGAAN</small>
+                            <div style="height:4px; width:75%; background:#cbd5e1; border-radius:4px; margin:6px auto;"></div>
+                            <div style="height:4px; width:55%; background:#cbd5e1; border-radius:4px; margin:6px auto;"></div>
+                            <div style="width:28px; height:28px; border-radius:50%; background:#10b981; color:white; display:flex; align-items:center; justify-content:center; font-size:12px; margin:10px auto 0;"><i class="fa-solid fa-check"></i></div>
+                        </div>
+                    </div>
+
+                    <a style="display:inline-block; font-size:12px; font-weight:700; color:#0b7fd0; margin-bottom:14px; cursor:pointer;" id="openFullDocLink">↗ Buka berkas penuh</a>
+
+                    <div class="meta-kv"><span style="color:#64748b;">Mahasiswa</span><strong id="detailStudent">Budi Santoso</strong></div>
+                    <div class="meta-kv"><span style="color:#64748b;">NPM</span><strong id="detailNpm">25753001</strong></div>
+                    <div class="meta-kv"><span style="color:#64748b;">Jenis</span><strong id="detailType">Sertifikat Lomba</strong></div>
+                    <div class="meta-kv"><span style="color:#64748b;">Penyelenggara</span><strong id="detailOrganizer">Kemdikbudristek</strong></div>
+                    <div class="meta-kv"><span style="color:#64748b;">Tanggal terbit</span><strong id="detailIssueDate">20 Okt 2025</strong></div>
+
+                    <div style="margin-top:14px;">
+                        <label style="display:block; font-size:12px; font-weight:700; margin-bottom:6px;">Catatan Validasi (opsional)</label>
+                        <textarea id="validationNoteInput" rows="3" style="width:100%; padding:10px; border:1px solid #38bdf8; border-radius:10px; font-size:12px;" placeholder="Tulis alasan jika pengajuan ditolak..."></textarea>
+                    </div>
+
+                    <div id="detailActionContainer"></div>
+                </div>
+
+                <div class="card-box">
+                    <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+                        <strong>Progres Validasi</strong>
+                        <strong style="color:#0b7fd0;" id="progRatioText">53 / 65</strong>
+                    </div>
+                    <div style="height:8px; background:#e2e8f0; border-radius:8px; overflow:hidden; margin-bottom:12px;">
+                        <div id="progBarFill" style="height:100%; background:#0b7fd0; width:81%;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#475569;">
+                        <span>● Disetujui <b id="legApproved">48</b></span>
+                        <span>● Ditolak <b id="legRejected">5</b></span>
+                        <span>● Menunggu <b id="legPending">12</b></span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- MODAL LIHAT BERKAS -->
+    <div id="docPreviewModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:560px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+                <div>
+                    <h2 style="font-size:18px; margin-bottom:3px;">Lihat Berkas</h2>
+                    <small style="font-size:11px; color:#64748b;" id="modalFileMeta">sertifikat_gemastik.pdf · 1,2 MB</small>
+                </div>
+                <button type="button" id="closeDocModalBtn" style="width:30px; height:30px; border-radius:50%; border:none; background:#f1f5f9; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:20px; margin-bottom:14px;">
+                <div style="border:1.5px dashed #38bdf8; border-radius:10px; padding:26px 20px; text-align:center;">
+                    <h4 style="color:#0b7fd0; font-size:13px; margin-bottom:8px;" id="fullCertHeading">SERTIFIKAT PENGHARGAAN</h4>
+                    <span style="font-size:11px; color:#64748b;">diberikan kepada</span>
+                    <div style="font-size:18px; font-weight:700; margin:6px 0;" id="fullCertStudent">Budi Santoso</div>
+                    <span style="font-size:11px; color:#64748b;">atas prestasi sebagai</span>
+                    <div style="font-size:13px; font-weight:700; margin-top:6px;" id="fullCertTitle">Juara 2 Lomba UI/UX – Gemastik 2025</div>
+                    <div style="width:34px; height:34px; border-radius:50%; background:#10b981; color:white; display:flex; align-items:center; justify-content:center; margin:14px auto 0;"><i class="fa-solid fa-check"></i></div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn-outline" id="closeDocFooterBtn">Tutup</button>
+                <div style="display:flex; gap:8px;" id="modalApproveRejectBtns">
+                    <button type="button" class="btn-danger-outline" id="modalTriggerReject">Tolak</button>
+                    <button type="button" class="btn-primary" id="modalTriggerApprove">Setujui</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI SETUJUI -->
+    <div id="approveConfirmModal" class="modal-overlay layer-2">
+        <div class="modal-box" style="max-width:400px; text-align:center; padding:28px 26px;">
+            <div style="width:54px; height:54px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#0b7fd0; color:white; font-weight:700; display:flex; align-items:center; justify-content:center;">?</div>
+            </div>
+            <h3 style="font-size:18px; margin-bottom:8px;">Setujui pengajuan ini?</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:22px;">Mahasiswa akan diberi tahu bahwa berkasnya valid.</p>
+            <div style="display:flex; gap:12px;">
+                <button type="button" class="btn-outline" style="flex:1;" id="cancelApproveBtn">Tidak</button>
+                <button type="button" class="btn-primary" style="flex:1;" id="confirmApproveBtn">Ya</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ALASAN TOLAK -->
+    <div id="rejectReasonModal" class="modal-overlay layer-2">
+        <div class="modal-box" style="max-width:430px; text-align:center; padding:28px 26px;">
+            <div style="width:54px; height:54px; border-radius:50%; background:#fef3c7; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#f59e0b; color:white; font-weight:700; display:flex; align-items:center; justify-content:center;">!</div>
+            </div>
+            <h3 style="font-size:18px; margin-bottom:6px;">Tolak pengajuan ini?</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Tulis alasan agar mahasiswa dapat memperbaiki pengajuannya.</p>
+
+            <div style="text-align:left; margin-bottom:16px;">
+                <label style="display:block; font-size:12px; font-weight:700; margin-bottom:6px;">Alasan penolakan <span style="color:#ef4444;">*</span></label>
+                <textarea id="rejectReasonTextarea" rows="3" style="width:100%; padding:10px; border:1px solid #94a3b8; border-radius:8px; font-size:12px;" placeholder="Contoh: Berkas buram, nama pada sertifikat tidak sesuai."></textarea>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                    <button type="button" class="reason-chip" data-reason="Berkas tidak terbaca">Berkas tidak terbaca</button>
+                    <button type="button" class="reason-chip" data-reason="Data tidak sesuai">Data tidak sesuai</button>
+                    <button type="button" class="reason-chip" data-reason="Dokumen tidak valid">Dokumen tidak valid</button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button type="button" class="btn-outline" style="flex:1;" id="cancelRejectReasonBtn">Batal</button>
+                <button type="button" class="btn-primary" style="flex:1;" id="nextRejectConfirmBtn">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI AKHIR TOLAK -->
+    <div id="rejectFinalModal" class="modal-overlay layer-2">
+        <div class="modal-box" style="max-width:400px; text-align:center; padding:28px 26px;">
+            <div style="width:54px; height:54px; border-radius:50%; background:#fef3c7; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#f59e0b; color:white; font-weight:700; display:flex; align-items:center; justify-content:center;">!</div>
+            </div>
+            <h3 style="font-size:18px; margin-bottom:8px;">Tolak pengajuan ini?</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:22px;">Mahasiswa akan menerima alasan penolakan Anda.</p>
+            <div style="display:flex; gap:12px;">
+                <button type="button" class="btn-outline" style="flex:1;" id="cancelRejectFinalBtn">Tidak</button>
+                <button type="button" class="btn-primary" style="flex:1;" id="confirmRejectFinalBtn">Ya</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app-core.js"></script>
+    <script>
+        const submissions = [
+            { id: 1, studentName: "Budi Santoso", npm: "25753001", batch: "TRPL · Angkatan 2025", category: "Sertifikat", docType: "Sertifikat Lomba", title: "Juara 2 Lomba UI/UX – Gemastik 2025", fileName: "sertifikat_gemastik.pdf", fileSize: "1,2 MB", uploadDate: "8 Nov 2026", issueDate: "20 Okt 2025", organizer: "Kemdikbudristek", status: "Menunggu", avatarColor: "#d97706", note: "" },
+            { id: 2, studentName: "Siti Rahma", npm: "25753014", batch: "TRPL · Angkatan 2025", category: "Nilai", docType: "Transkrip Nilai Mata Kuliah", title: "Nilai Mata Kuliah Basis Data – Skor A (92)", fileName: "transkrip.pdf", fileSize: "840 KB", uploadDate: "7 Nov 2026", issueDate: "15 Jul 2026", organizer: "Politeknik Negeri Lampung", status: "Menunggu", avatarColor: "#0d9488", note: "" },
+            { id: 3, studentName: "Andi Pratama", npm: "24753009", batch: "TRPL · Angkatan 2024", category: "Sertifikat", docType: "Sertifikat Peserta Lomba", title: "Peserta Hackathon IoT Lampung 2026", fileName: "sertifikat.png", fileSize: "1,5 MB", uploadDate: "5 Nov 2026", issueDate: "01 Nov 2026", organizer: "Pemprov Lampung", status: "Disetujui", avatarColor: "#6366f1", note: "" },
+            { id: 4, studentName: "Dinda Putri", npm: "25753022", batch: "TRPL · Angkatan 2025", category: "Sertifikat", docType: "Sertifikat Kompetensi", title: "Sertifikasi Dasar Flutter – Dicoding", fileName: "sertifikat.jpg", fileSize: "960 KB", uploadDate: "3 Nov 2026", issueDate: "12 Sep 2026", organizer: "Dicoding Indonesia", status: "Ditolak", avatarColor: "#0b7fd0", note: "Resolusi gambar kurang jelas." }
+        ];
+
+        const baseCounts = { Menunggu: 10, Disetujui: 47, Ditolak: 4 };
+        let selectedId = 1;
+        let currentFilter = "Semua";
+
+        function renderSubmissions() {
+            const pending = baseCounts.Menunggu + submissions.filter(s => s.status === "Menunggu").length;
+            const approved = baseCounts.Disetujui + submissions.filter(s => s.status === "Disetujui").length;
+            const rejected = baseCounts.Ditolak + submissions.filter(s => s.status === "Ditolak").length;
+            const total = pending + approved + rejected;
+            const processed = approved + rejected;
+
+            document.getElementById("statPending").textContent = pending;
+            document.getElementById("statApproved").textContent = approved;
+            document.getElementById("statRejected").textContent = rejected;
+            document.getElementById("statTotal").textContent = total;
+            document.getElementById("progRatioText").textContent = `${processed} / ${total}`;
+            document.getElementById("progBarFill").style.width = `${Math.round((processed / total) * 100)}%`;
+            document.getElementById("legApproved").textContent = approved;
+            document.getElementById("legRejected").textContent = rejected;
+            document.getElementById("legPending").textContent = pending;
+
+            const kw = document.getElementById("searchInput").value.toLowerCase().trim();
+            let filtered = submissions.filter(item => {
+                const matchF = currentFilter === "Semua" || item.category === currentFilter || item.status === currentFilter;
+                const matchK = !kw || item.studentName.toLowerCase().includes(kw) || item.npm.includes(kw) || item.title.toLowerCase().includes(kw);
+                return matchF && matchK;
+            });
+            if (document.getElementById("sortSelect").value === "oldest") filtered = [...filtered].reverse();
+
+            document.getElementById("submissionList").innerHTML = filtered.map(item => {
+                const stClass = item.status === "Disetujui" ? "st-disetujui" : item.status === "Ditolak" ? "st-ditolak" : "st-menunggu";
+                return `
+                    <article class="submission-card ${item.id === selectedId ? 'selected' : ''}" data-id="${item.id}">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:38px; height:38px; border-radius:50%; background:${item.avatarColor};"></div>
+                                <div><strong style="display:block; font-size:14px;">${item.studentName}</strong><small style="font-size:11px; color:#64748b;">${item.batch} · ${item.npm}</small></div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <span class="type-pill">${item.category}</span>
+                                <span class="status-pill ${stClass}">${item.status}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                            <div>
+                                <strong style="display:block; font-size:14px; margin-bottom:4px;">${item.title}</strong>
+                                <span style="font-size:11px; color:#64748b;">Diunggah ${item.uploadDate} · ${item.fileName}</span>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" class="btn-outline open-doc-btn" style="padding:7px 16px; font-size:12px;" data-id="${item.id}">Lihat Berkas</button>
+                                ${item.status === "Menunggu" ? `<button type="button" class="btn-primary quick-approve-btn" style="padding:7px 18px; font-size:12px;" data-id="${item.id}">Setujui</button>` : ""}
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            const cur = submissions.find(s => s.id === selectedId) || submissions[0];
+            if (cur) {
+                const b = document.getElementById("detailStatusBadge");
+                b.textContent = cur.status;
+                b.className = "status-pill " + (cur.status === "Disetujui" ? "st-disetujui" : cur.status === "Ditolak" ? "st-ditolak" : "st-menunggu");
+                document.getElementById("miniCertHeader").textContent = cur.category === "Nilai" ? "TRANSKRIP NILAI AKADEMIK" : "SERTIFIKAT PENGHARGAAN";
+                document.getElementById("detailStudent").textContent = cur.studentName;
+                document.getElementById("detailNpm").textContent = cur.npm;
+                document.getElementById("detailType").textContent = cur.docType;
+                document.getElementById("detailOrganizer").textContent = cur.organizer;
+                document.getElementById("detailIssueDate").textContent = cur.issueDate;
+                document.getElementById("validationNoteInput").value = cur.note || "";
+
+                const act = document.getElementById("detailActionContainer");
+                if (cur.status === "Menunggu") {
+                    act.innerHTML = `<div style="display:flex; gap:10px; margin-top:14px;"><button type="button" class="btn-danger-outline" style="flex:1; padding:10px;" id="detailRejectBtn">Tolak</button><button type="button" class="btn-primary" style="flex:1;" id="detailApproveBtn">Setujui</button></div>`;
+                } else if (cur.status === "Disetujui") {
+                    act.innerHTML = `<div class="status-banner-done banner-approved">Pengajuan telah disetujui</div>`;
+                } else {
+                    act.innerHTML = `<div class="status-banner-done banner-rejected">Pengajuan telah ditolak</div>`;
+                }
+            }
+        }
+
+        function openDocModal(id) {
+            selectedId = id;
+            renderSubmissions();
+            const item = submissions.find(s => s.id === id);
+            if (!item) return;
+            document.getElementById("modalFileMeta").textContent = `${item.fileName} · ${item.fileSize} · Diunggah ${item.uploadDate}`;
+            document.getElementById("fullCertHeading").textContent = item.category === "Nilai" ? "TRANSKRIP NILAI MATA KULIAH" : "SERTIFIKAT PENGHARGAAN";
+            document.getElementById("fullCertStudent").textContent = item.studentName;
+            document.getElementById("fullCertTitle").textContent = item.title;
+            document.getElementById("modalApproveRejectBtns").style.display = item.status === "Menunggu" ? "flex" : "none";
+            document.getElementById("docPreviewModal").style.display = "flex";
+        }
+
+        document.querySelectorAll(".filter-pill-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".filter-pill-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentFilter = btn.dataset.filter;
+                renderSubmissions();
+            });
+        });
+        document.getElementById("searchInput").addEventListener("input", renderSubmissions);
+        document.getElementById("sortSelect").addEventListener("change", renderSubmissions);
+
+        document.addEventListener("click", (e) => {
+            const viewBtn = e.target.closest(".open-doc-btn");
+            if (viewBtn) { e.stopPropagation(); openDocModal(Number(viewBtn.dataset.id)); return; }
+            const qApp = e.target.closest(".quick-approve-btn");
+            if (qApp) { e.stopPropagation(); selectedId = Number(qApp.dataset.id); renderSubmissions(); document.getElementById("approveConfirmModal").style.display = "flex"; return; }
+            const card = e.target.closest(".submission-card");
+            if (card) { selectedId = Number(card.dataset.id); renderSubmissions(); }
+            if (e.target.id === "detailApproveBtn" || e.target.id === "modalTriggerApprove") document.getElementById("approveConfirmModal").style.display = "flex";
+            if (e.target.id === "detailRejectBtn" || e.target.id === "modalTriggerReject") {
+                document.getElementById("rejectReasonTextarea").value = document.getElementById("validationNoteInput").value.trim();
+                document.getElementById("rejectReasonModal").style.display = "flex";
+            }
+            const chip = e.target.closest(".reason-chip");
+            if (chip) document.getElementById("rejectReasonTextarea").value = chip.dataset.reason;
+        });
+
+        document.getElementById("miniPreviewBox").onclick = () => openDocModal(selectedId);
+        document.getElementById("openFullDocLink").onclick = () => openDocModal(selectedId);
+        document.getElementById("closeDocModalBtn").onclick = () => document.getElementById("docPreviewModal").style.display = "none";
+        document.getElementById("closeDocFooterBtn").onclick = () => document.getElementById("docPreviewModal").style.display = "none";
+
+        document.getElementById("cancelApproveBtn").onclick = () => document.getElementById("approveConfirmModal").style.display = "none";
+        document.getElementById("confirmApproveBtn").onclick = () => {
+            const item = submissions.find(s => s.id === selectedId);
+            if (item) { item.status = "Disetujui"; item.note = document.getElementById("validationNoteInput").value.trim(); }
+            document.getElementById("approveConfirmModal").style.display = "none";
+            document.getElementById("docPreviewModal").style.display = "none";
+            renderSubmissions();
+            window.showToast("Pengajuan berhasil disetujui!");
+        };
+
+        document.getElementById("cancelRejectReasonBtn").onclick = () => document.getElementById("rejectReasonModal").style.display = "none";
+        document.getElementById("nextRejectConfirmBtn").onclick = () => {
+            if (!document.getElementById("rejectReasonTextarea").value.trim()) {
+                window.showToast("Tuliskan alasan penolakan terlebih dahulu.", "error"); return;
+            }
+            document.getElementById("rejectReasonModal").style.display = "none";
+            document.getElementById("rejectFinalModal").style.display = "flex";
+        };
+        document.getElementById("cancelRejectFinalBtn").onclick = () => document.getElementById("rejectFinalModal").style.display = "none";
+        document.getElementById("confirmRejectFinalBtn").onclick = () => {
+            const item = submissions.find(s => s.id === selectedId);
+            if (item) { item.status = "Ditolak"; item.note = document.getElementById("rejectReasonTextarea").value.trim(); }
+            document.getElementById("rejectFinalModal").style.display = "none";
+            document.getElementById("docPreviewModal").style.display = "none";
+            renderSubmissions();
+            window.showToast("Pengajuan telah ditolak.", "info");
+        };
+
+        document.getElementById("exportCsvBtn").onclick = () => {
+            const rows = [["Mahasiswa", "NPM", "Jenis", "Judul Berkas", "Status"], ...submissions.map(s => [s.studentName, s.npm, s.category, s.title, s.status])];
+            const link = document.createElement("a");
+            link.href = encodeURI("data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n"));
+            link.download = "rekap_validasi_skilllink.csv";
+            link.click();
+            window.showToast("Rekap validasi berhasil diunduh (CSV)!");
+        };
+
+        document.addEventListener("DOMContentLoaded", renderSubmissions);
+    </script>
+</body>
+</html>

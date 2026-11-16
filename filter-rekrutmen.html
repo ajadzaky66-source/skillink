@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Rekrutmen - Skill Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .filter-layout {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+        .filter-group { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; }
+        .filter-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .filter-group h4 { font-size: 13px; margin-bottom: 10px; color: #0f172a; }
+        .check-row {
+            display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155;
+            margin-bottom: 8px; cursor: pointer;
+        }
+        .result-list { display: flex; flex-direction: column; gap: 14px; }
+        .rec-card {
+            background: white; border-radius: 14px; padding: 18px 22px;
+            display: flex; justify-content: space-between; align-items: center; gap: 16px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        }
+        .rec-left { display: flex; align-items: center; gap: 14px; }
+        .rec-badge {
+            width: 46px; height: 46px; border-radius: 12px; color: white; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .rec-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .r-tag { padding: 4px 11px; border-radius: 12px; background: #eff6ff; color: #0b7fd0; font-size: 11px; font-weight: 600; }
+        @media (max-width: 860px) { .filter-layout { grid-template-columns: 1fr; } .rec-card { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+    <div id="appShell"></div>
+
+    <main class="main-container">
+        <div class="page-header-row">
+            <div>
+                <h1 class="page-title">Filter Rekrutmen</h1>
+                <p class="page-subtitle">Saring lowongan anggota tim berdasarkan posisi, angkatan, dan keahlian spesifik.</p>
+            </div>
+            <button type="button" class="btn-outline" id="resetFilterBtn">Reset Filter</button>
+        </div>
+
+        <div class="filter-layout">
+            <aside class="card-box">
+                <div class="filter-group">
+                    <h4>Posisi yang Dibutuhkan</h4>
+                    <label class="check-row"><input type="checkbox" class="role-cb" value="Frontend Developer" checked> Frontend Developer</label>
+                    <label class="check-row"><input type="checkbox" class="role-cb" value="Backend Developer" checked> Backend Developer</label>
+                    <label class="check-row"><input type="checkbox" class="role-cb" value="UI/UX Designer" checked> UI/UX Designer</label>
+                    <label class="check-row"><input type="checkbox" class="role-cb" value="Data Scientist" checked> Data Scientist</label>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Tingkat Lomba</h4>
+                    <label class="check-row"><input type="checkbox" class="level-cb" value="Nasional" checked> Nasional</label>
+                    <label class="check-row"><input type="checkbox" class="level-cb" value="Regional" checked> Regional</label>
+                    <label class="check-row"><input type="checkbox" class="level-cb" value="Internasional" checked> Internasional</label>
+                </div>
+            </aside>
+
+            <section>
+                <div style="margin-bottom:12px; font-size:13px; color:#475569;" id="matchCountText">Menampilkan 4 posisi terbuka</div>
+                <div class="result-list" id="recruitResultList"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app-core.js"></script>
+    <script>
+        const openings = [
+            { team: "Byte Builders", role: "UI/UX Designer", comp: "Gemastik 2026", level: "Nasional", skills: ["Figma", "Prototyping"], color: "#ea580c" },
+            { team: "Byte Builders", role: "Backend Developer", comp: "Hackathon AI", level: "Nasional", skills: ["Laravel", "REST API"], color: "#0b7fd0" },
+            { team: "Data Mavericks", role: "Data Scientist", comp: "Data Science Challenge", level: "Internasional", skills: ["Python", "Pandas"], color: "#0d9488" },
+            { team: "AgroTech Lampung", role: "Frontend Developer", comp: "Innovation Challenge", level: "Regional", skills: ["React", "Tailwind"], color: "#6366f1" }
+        ];
+
+        function applyFilters() {
+            const checkedRoles = Array.from(document.querySelectorAll(".role-cb:checked")).map(c => c.value);
+            const checkedLevels = Array.from(document.querySelectorAll(".level-cb:checked")).map(c => c.value);
+
+            const filtered = openings.filter(o => checkedRoles.includes(o.role) && checkedLevels.includes(o.level));
+            document.getElementById("matchCountText").textContent = `Menampilkan ${filtered.length} posisi terbuka`;
+
+            document.getElementById("recruitResultList").innerHTML = filtered.length === 0
+                ? `<div class="card-box" style="text-align:center; color:#64748b;">Tidak ada posisi yang cocok dengan kombinasi filter.</div>`
+                : filtered.map(o => `
+                    <div class="rec-card">
+                        <div class="rec-left">
+                            <div class="rec-badge" style="background:${o.color};">${o.team.substring(0,2).toUpperCase()}</div>
+                            <div>
+                                <strong style="font-size:15px; display:block;">${o.role} — ${o.team}</strong>
+                                <small style="font-size:12px; color:#64748b;">${o.comp} · Tingkat ${o.level}</small>
+                                <div class="rec-tags">
+                                    ${o.skills.map(s => `<span class="r-tag">${s}</span>`).join("")}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-primary" onclick="location.href='cari-tim.html'">Lamar Posisi</button>
+                    </div>
+                `).join("");
+        }
+
+        document.querySelectorAll("input[type='checkbox']").forEach(cb => cb.addEventListener("change", applyFilters));
+        document.getElementById("resetFilterBtn").addEventListener("click", () => {
+            document.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = true);
+            applyFilters();
+        });
+
+        document.addEventListener("DOMContentLoaded", applyFilters);
+    </script>
+</body>
+</html>

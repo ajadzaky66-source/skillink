@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Susunan Portofolio - Skill Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .porto-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+        }
+        .porto-card {
+            background: white; border-radius: 14px; padding: 20px 22px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .porto-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+        .porto-badge { padding: 4px 12px; border-radius: 12px; background: #e0f2fe; color: #0b7fd0; font-size: 11px; font-weight: 700; }
+        .porto-desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 14px; }
+        .porto-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 12px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b;
+        }
+        @media (max-width: 820px) { .porto-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div id="appShell"></div>
+
+    <main class="main-container">
+        <div class="page-header-row">
+            <div>
+                <h1 class="page-title">Susunan Portofolio</h1>
+                <p class="page-subtitle">Tampilkan karya, proyek kuliah, dan sertifikat prestasi lomba terbaikmu.</p>
+            </div>
+            <button type="button" class="btn-primary" id="openPortoModalBtn">+ Tambah Portofolio</button>
+        </div>
+
+        <div class="porto-grid" id="portoGrid"></div>
+    </main>
+
+    <!-- Modal Tambah Portofolio -->
+    <div id="portoModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:480px;">
+            <h2 style="font-size:18px; margin-bottom:4px;">Tambah Portofolio</h2>
+            <p style="font-size:12px; color:#64748b; margin-bottom:16px;">Tambahkan proyek atau prestasi lomba ke profil Anda.</p>
+
+            <form id="portoForm">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:12px; font-weight:700; margin-bottom:5px;">Judul Karya / Prestasi *</label>
+                    <input type="text" id="pTitle" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px;" placeholder="Contoh: Juara 2 Lomba UI/UX Gemastik">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; margin-bottom:5px;">Peran *</label>
+                        <input type="text" id="pRole" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px;" placeholder="UI/UX Designer">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; margin-bottom:5px;">Tahun *</label>
+                        <input type="text" id="pYear" required value="2026" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px;">
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:12px; font-weight:700; margin-bottom:5px;">Deskripsi Singkat</label>
+                    <textarea id="pDesc" rows="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px;" placeholder="Jelaskan kontribusi dan teknologi yang digunakan..."></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="btn-outline" id="closePortoModalBtn">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app-core.js"></script>
+    <script>
+        const PORTO_KEY = "skillLinkPortfolios";
+        const defaultPortos = [
+            { id: 1, title: "Juara 2 UI/UX Gemastik 2025", role: "UI/UX Designer", year: "2025", desc: "Merancang sistem desain dan prototipe interaktif aplikasi kesehatan inklusif menggunakan Figma." },
+            { id: 2, title: "Aplikasi Web Skill Link TRPL", role: "Fullstack Web Developer", year: "2026", desc: "Platform pencarian tim lomba dan validasi sertifikat mahasiswa Teknologi Rekayasa Perangkat Lunak." }
+        ];
+
+        let portos = JSON.parse(localStorage.getItem(PORTO_KEY) || "null") || defaultPortos;
+
+        function renderPortos() {
+            document.getElementById("portoGrid").innerHTML = portos.map((p, idx) => `
+                <article class="porto-card">
+                    <div>
+                        <div class="porto-top">
+                            <h3 style="font-size:16px;">${p.title}</h3>
+                            <span class="porto-badge">${p.year}</span>
+                        </div>
+                        <div style="font-size:12px; color:#0b7fd0; font-weight:700; margin-bottom:8px;">${p.role}</div>
+                        <p class="porto-desc">${p.desc}</p>
+                    </div>
+                    <div class="porto-footer">
+                        <span>Status: <b style="color:#15803d;">Ditampilkan di Profil</b></span>
+                        <button type="button" class="btn-danger-outline" onclick="deletePorto(${idx})">Hapus</button>
+                    </div>
+                </article>
+            `).join("");
+        }
+
+        window.deletePorto = function (idx) {
+            portos.splice(idx, 1);
+            localStorage.setItem(PORTO_KEY, JSON.stringify(portos));
+            renderPortos();
+            window.showToast("Item portofolio dihapus.");
+        };
+
+        const modal = document.getElementById("portoModal");
+        document.getElementById("openPortoModalBtn").onclick = () => { document.getElementById("portoForm").reset(); modal.style.display = "flex"; };
+        document.getElementById("closePortoModalBtn").onclick = () => modal.style.display = "none";
+
+        document.getElementById("portoForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            portos.unshift({
+                id: Date.now(),
+                title: document.getElementById("pTitle").value.trim(),
+                role: document.getElementById("pRole").value.trim(),
+                year: document.getElementById("pYear").value.trim(),
+                desc: document.getElementById("pDesc").value.trim() || "Karya mahasiswa TRPL."
+            });
+            localStorage.setItem(PORTO_KEY, JSON.stringify(portos));
+            modal.style.display = "none";
+            renderPortos();
+            window.showToast("Portofolio berhasil ditambahkan!");
+        });
+
+        document.addEventListener("DOMContentLoaded", renderPortos);
+    </script>
+</body>
+</html>

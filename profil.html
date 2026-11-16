@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Saya - Skill Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+        .profile-card-left {
+            text-align: center;
+        }
+        .big-avatar-wrap {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            margin: 0 auto 14px;
+        }
+        .big-avatar {
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            background: #14968c;
+            color: white;
+            font-size: 38px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 4px solid #e0f2fe;
+        }
+        .big-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .cam-btn {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #0b7fd0;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+        .profile-name { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+        .profile-sub { font-size: 12px; color: #64748b; margin-bottom: 14px; }
+        .status-ready-pill {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 16px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+        .mini-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 14px 0;
+            border-top: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+        }
+        .mini-stat strong { display: block; font-size: 17px; color: #0b7fd0; }
+        .mini-stat span { font-size: 11px; color: #64748b; }
+
+        .right-stack { display: flex; flex-direction: column; gap: 20px; }
+        .section-title-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;
+        }
+        .section-title-bar h3 { font-size: 16px; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .info-item label { display: block; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+        .info-item p { font-size: 13px; font-weight: 600; color: #0f172a; }
+        .bio-box {
+            margin-top: 16px;
+            padding: 12px 14px;
+            background: #f8fafc;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.5;
+        }
+
+        /* Edit Form */
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-field { margin-bottom: 12px; }
+        .form-field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+        .form-field input, .form-field textarea {
+            width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1;
+            border-radius: 8px; font-size: 13px; outline: none;
+        }
+        .form-field input:focus, .form-field textarea:focus { border-color: #0b7fd0; }
+
+        /* Skills */
+        .skill-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .skill-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px; border-radius: 18px;
+            background: #eff6ff; color: #0b7fd0; border: 1px solid #bfdbfe;
+            font-size: 12px; font-weight: 600;
+        }
+        .skill-chip button {
+            background: none; border: none; color: #0b7fd0; cursor: pointer; font-weight: 700;
+        }
+        .add-skill-row { display: flex; gap: 8px; }
+        .add-skill-row input {
+            flex: 1; padding: 9px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; outline: none;
+        }
+
+        .porto-mini-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 14px; border-radius: 10px; background: #f8fafc; margin-bottom: 10px;
+        }
+        @media (max-width: 880px) {
+            .profile-grid, .info-grid, .edit-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="appShell"></div>
+
+    <main class="main-container">
+        <div class="page-header-row">
+            <div>
+                <h1 class="page-title">Profil Saya</h1>
+                <p class="page-subtitle">Kelola identitas akademik, keahlian teknis, dan ringkasan portofolio lomba Anda.</p>
+            </div>
+            <button type="button" class="btn-primary" id="toggleEditBtn">
+                <i class="fa-solid fa-pen"></i> Edit Profil
+            </button>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Kartu Kiri -->
+            <aside class="card-box profile-card-left">
+                <div class="big-avatar-wrap">
+                    <div class="big-avatar" id="bigAvatar">D</div>
+                    <button type="button" class="cam-btn" id="uploadPhotoTrigger" title="Ganti Foto Profil">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                    <input type="file" id="photoInput" accept="image/*" class="hidden">
+                </div>
+
+                <div class="profile-name" id="dispName">Muhammad Dzaky Rizqullah</div>
+                <div class="profile-sub" id="dispSub">TRPL · Angkatan 2025</div>
+                <span class="status-ready-pill">Siap Mengikuti Lomba</span>
+
+                <div class="mini-stats-row">
+                    <div class="mini-stat"><strong id="cntSkills">5</strong><span>Skill</span></div>
+                    <div class="mini-stat"><strong id="cntPorto">2</strong><span>Portofolio</span></div>
+                    <div class="mini-stat"><strong>3</strong><span>Tim Aktif</span></div>
+                </div>
+
+                <button type="button" class="btn-outline" style="width:100%;" onclick="location.href='portofolio.html'">
+                    Kelola Susunan Portofolio
+                </button>
+            </aside>
+
+            <!-- Kolom Kanan -->
+            <div class="right-stack">
+                <!-- Informasi Akademik -->
+                <div class="card-box">
+                    <div class="section-title-bar">
+                        <h3>Informasi Akademik &amp; Pribadi</h3>
+                    </div>
+
+                    <div id="viewModeBox">
+                        <div class="info-grid">
+                            <div class="info-item"><label>Nama Lengkap</label><p id="vName">Muhammad Dzaky Rizqullah</p></div>
+                            <div class="info-item"><label>NPM</label><p id="vNpm">25753045</p></div>
+                            <div class="info-item"><label>Jurusan</label><p id="vMajor">Teknologi Informasi</p></div>
+                            <div class="info-item"><label>Program Studi</label><p id="vProdi">TRPL</p></div>
+                            <div class="info-item"><label>Email Kampus</label><p id="vEmail">dzaky.trpl25@student.polinela.ac.id</p></div>
+                            <div class="info-item"><label>Angkatan</label><p id="vYear">2025</p></div>
+                        </div>
+                        <div class="bio-box" id="vBio">
+                            Mahasiswa Teknologi Rekayasa Perangkat Lunak yang berfokus pada pengembangan Web Fullstack (Laravel &amp; React) serta perancangan UI/UX untuk kompetisi teknologi nasional.
+                        </div>
+                    </div>
+
+                    <form id="editModeForm" class="hidden">
+                        <div class="edit-grid">
+                            <div class="form-field"><label>Nama Lengkap</label><input type="text" id="iName" required></div>
+                            <div class="form-field"><label>NPM</label><input type="text" id="iNpm" required></div>
+                            <div class="form-field"><label>Jurusan</label><input type="text" id="iMajor" required></div>
+                            <div class="form-field"><label>Program Studi</label><input type="text" id="iProdi" required></div>
+                            <div class="form-field"><label>Email Kampus</label><input type="email" id="iEmail" required></div>
+                            <div class="form-field"><label>Angkatan</label><input type="text" id="iYear" required></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Bio Singkat</label>
+                            <textarea id="iBio" rows="3"></textarea>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; gap:10px;">
+                            <button type="button" class="btn-outline" id="cancelEditBtn">Batal</button>
+                            <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Keahlian / Skill -->
+                <div class="card-box">
+                    <div class="section-title-bar">
+                        <h3>Keahlian &amp; Teknologi</h3>
+                    </div>
+                    <div class="skill-chips-wrap" id="skillsWrap"></div>
+                    <div class="add-skill-row">
+                        <input type="text" id="newSkillInput" placeholder="Tambah skill baru (misal: Flutter, Tailwind CSS, Python)...">
+                        <button type="button" class="btn-primary" id="addSkillBtn">+ Tambah</button>
+                    </div>
+                </div>
+
+                <!-- Ringkasan Portofolio -->
+                <div class="card-box">
+                    <div class="section-title-bar">
+                        <h3>Portofolio &amp; Prestasi Terbaru</h3>
+                        <a href="portofolio.html" style="font-size:12px; color:#0b7fd0; font-weight:700; text-decoration:none;">Lihat Semua</a>
+                    </div>
+                    <div id="profilePortoPreview"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app-core.js"></script>
+    <script>
+        const PROFILE_KEY = "skillLinkProfile";
+        const PHOTO_KEY = "skillLinkProfilePhoto";
+        const SKILLS_KEY = "skillLinkSkills";
+        const PORTO_KEY = "skillLinkPortfolios";
+
+        const defaultProfile = {
+            name: "Muhammad Dzaky Rizqullah",
+            npm: "25753045",
+            major: "Teknologi Informasi",
+            studyProgram: "TRPL",
+            email: "dzaky.trpl25@student.polinela.ac.id",
+            year: "2025",
+            bio: "Mahasiswa Teknologi Rekayasa Perangkat Lunak yang berfokus pada pengembangan Web Fullstack (Laravel & React) serta perancangan UI/UX untuk kompetisi teknologi nasional."
+        };
+
+        let profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null") || defaultProfile;
+        let skills = JSON.parse(localStorage.getItem(SKILLS_KEY) || "null") || ["Laravel", "UI/UX Design", "Figma", "JavaScript", "MySQL"];
+
+        function renderProfile() {
+            document.getElementById("dispName").textContent = profile.name;
+            document.getElementById("dispSub").textContent = `${profile.studyProgram} · Angkatan ${profile.year}`;
+            document.getElementById("vName").textContent = profile.name;
+            document.getElementById("vNpm").textContent = profile.npm;
+            document.getElementById("vMajor").textContent = profile.major;
+            document.getElementById("vProdi").textContent = profile.studyProgram;
+            document.getElementById("vEmail").textContent = profile.email;
+            document.getElementById("vYear").textContent = profile.year;
+            document.getElementById("vBio").textContent = profile.bio;
+
+            const savedPhoto = localStorage.getItem(PHOTO_KEY);
+            const bigAvatar = document.getElementById("bigAvatar");
+            if (savedPhoto) {
+                bigAvatar.innerHTML = `<img src="${savedPhoto}" alt="Foto Profil">`;
+            } else {
+                bigAvatar.textContent = profile.name.charAt(0).toUpperCase();
+            }
+
+            // Update header langsung
+            const hName = document.getElementById("headerName");
+            const hSub = document.getElementById("headerSubtitle");
+            if (hName) hName.textContent = profile.name;
+            if (hSub) hSub.textContent = `${profile.studyProgram} - Angkatan ${profile.year}`;
+        }
+
+        function renderSkills() {
+            document.getElementById("cntSkills").textContent = skills.length;
+            document.getElementById("skillsWrap").innerHTML = skills.map((s, i) => `
+                <span class="skill-chip">
+                    ${s}
+                    <button type="button" onclick="removeSkill(${i})" title="Hapus">&times;</button>
+                </span>
+            `).join("");
+        }
+
+        window.removeSkill = function (idx) {
+            skills.splice(idx, 1);
+            localStorage.setItem(SKILLS_KEY, JSON.stringify(skills));
+            renderSkills();
+            window.showToast("Skill dihapus.");
+        };
+
+        document.getElementById("addSkillBtn").addEventListener("click", () => {
+            const inp = document.getElementById("newSkillInput");
+            const val = inp.value.trim();
+            if (!val) return;
+            if (!skills.includes(val)) {
+                skills.push(val);
+                localStorage.setItem(SKILLS_KEY, JSON.stringify(skills));
+                renderSkills();
+                window.showToast(`Skill "${val}" ditambahkan.`);
+            }
+            inp.value = "";
+        });
+
+        // Edit Mode Toggle
+        const viewBox = document.getElementById("viewModeBox");
+        const editForm = document.getElementById("editModeForm");
+
+        document.getElementById("toggleEditBtn").addEventListener("click", () => {
+            document.getElementById("iName").value = profile.name;
+            document.getElementById("iNpm").value = profile.npm;
+            document.getElementById("iMajor").value = profile.major;
+            document.getElementById("iProdi").value = profile.studyProgram;
+            document.getElementById("iEmail").value = profile.email;
+            document.getElementById("iYear").value = profile.year;
+            document.getElementById("iBio").value = profile.bio;
+            viewBox.classList.add("hidden");
+            editForm.classList.remove("hidden");
+        });
+
+        document.getElementById("cancelEditBtn").addEventListener("click", () => {
+            editForm.classList.add("hidden");
+            viewBox.classList.remove("hidden");
+        });
+
+        editForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            profile = {
+                name: document.getElementById("iName").value.trim(),
+                npm: document.getElementById("iNpm").value.trim(),
+                major: document.getElementById("iMajor").value.trim(),
+                studyProgram: document.getElementById("iProdi").value.trim(),
+                email: document.getElementById("iEmail").value.trim(),
+                year: document.getElementById("iYear").value.trim(),
+                bio: document.getElementById("iBio").value.trim()
+            };
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+            editForm.classList.add("hidden");
+            viewBox.classList.remove("hidden");
+            renderProfile();
+            window.showToast("Profil berhasil diperbarui!");
+        });
+
+        // Upload Foto
+        document.getElementById("uploadPhotoTrigger").addEventListener("click", () => {
+            document.getElementById("photoInput").click();
+        });
+
+        document.getElementById("photoInput").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                localStorage.setItem(PHOTO_KEY, ev.target.result);
+                renderProfile();
+                const headerAv = document.getElementById("headerAvatar");
+                if (headerAv) headerAv.innerHTML = `<img src="${ev.target.result}" alt="Avatar">`;
+                window.showToast("Foto profil berhasil diperbarui!");
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function renderPortoPreview() {
+            const defaultPortos = [
+                { title: "Juara 2 UI/UX Gemastik 2025", role: "UI/UX Designer", year: "2025" },
+                { title: "Aplikasi Smart Campus Polinela", role: "Fullstack Web Developer", year: "2026" }
+            ];
+            const portos = JSON.parse(localStorage.getItem(PORTO_KEY) || "null") || defaultPortos;
+            document.getElementById("cntPorto").textContent = portos.length;
+            document.getElementById("profilePortoPreview").innerHTML = portos.slice(0, 3).map(p => `
+                <div class="porto-mini-item">
+                    <div>
+                        <strong style="display:block; font-size:13px;">${p.title}</strong>
+                        <small style="color:#64748b; font-size:11px;">${p.role || p.category || "Proyek & Lomba"} · ${p.year || "2026"}</small>
+                    </div>
+                    <span style="padding:4px 12px; border-radius:12px; background:#dcfce7; color:#15803d; font-size:11px; font-weight:700;">Terverifikasi</span>
+                </div>
+            `).join("");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderProfile();
+            renderSkills();
+            renderPortoPreview();
+        });
+    </script>
+</body>
+</html>
